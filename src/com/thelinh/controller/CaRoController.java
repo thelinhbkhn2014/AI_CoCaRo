@@ -26,6 +26,9 @@ public class CaRoController {
     private Stack<OCo> stList;
     private boolean ready;
     private int turn;   
+    private int mode;
+
+    
     public enum Finish{
         HoaCo,
         Player1,
@@ -42,6 +45,12 @@ public class CaRoController {
         turn = 1;
     }
 
+    public int getMode() {
+        return mode;
+    }
+
+    
+    
     public boolean isReady() {
         return ready;
     }
@@ -54,6 +63,8 @@ public class CaRoController {
     public void veBanCo(Graphics g){
         banCo.veBanCo(g);
     }
+   
+    
     
     public void oCoArrray(){
         for(int i = 0; i < BanCo.rowNumbers; i++){
@@ -114,6 +125,7 @@ public class CaRoController {
             g.clearRect(oCo.getLocation().x, oCo.getLocation().y, OCo.width, OCo.height);
         }     
         turn = 1;
+        mode = 1;
         stList = new Stack<OCo>();
         veBanCo(g);
     }
@@ -163,7 +175,7 @@ public class CaRoController {
     
     
     
-    public boolean checkWin(){              
+    public boolean checkWin(){  
         for(OCo oCo : stList){
             if(vertical(oCo.getRow(), oCo.getColumn(), oCo.getPlayer()) || 
                horizontal(oCo.getRow(), oCo.getColumn(), oCo.getPlayer()) ||
@@ -296,6 +308,944 @@ public class CaRoController {
         return false;
     }
     
+    public void startPlayerVSCom(Graphics g){
+        ready = true;
+        oCoArrray();
+        for(OCo oCo : stList){
+            g.clearRect(oCo.getLocation().x, oCo.getLocation().y, OCo.width, OCo.height);
+        }     
+        turn = 1;
+        mode = 2;
+        stList = new Stack<OCo>();
+        veBanCo(g);
+        startComputer(g);
+    }
     
+    //AI
+    private long[] attackScore = {0, 64, 4096, 262144, 16777216, 1073741824};
+    private long[] defendScore = {0, 8, 512, 32768, 2097152, 134217728 };
+
+ 
+    // attack
+    
+    private long attackScoreVertical(int currentRow, int currentColumn){
+        long atkScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+        // tren xuong
+            for(int i = 1; i < 5 && currentRow + i < BanCo.rowNumbers; i++){
+                if(oCoArray[currentRow + i][currentColumn].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow + i][currentColumn].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentRow + j < BanCo.rowNumbers; j++){
+                        if(oCoArray[currentRow + j][currentColumn].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow + j][currentColumn].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            for(int i = 1; i < 5 && currentRow - i >= 0; i++){
+                if(oCoArray[currentRow - i][currentColumn].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow - i][currentColumn].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentRow - j >= 0; j++){
+                        if(oCoArray[currentRow - j][currentColumn].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow - j][currentColumn].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        
+        
+       
+       
+            if(eHuman == 2){
+                return 0;
+            }
+            
+            if(eHuman == 0){
+                atkScore += attackScore[ePC] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC];
+            }
+            
+            if(eHuman2 == 0){
+                atkScore += attackScore[ePC2] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC2];
+            }
+            
+            if(ePC >= ePC2){
+                atkScore -= 1;
+            }
+            else{
+                atkScore -= 2;
+            }
+            
+            if(ePC == 4){
+                atkScore *= 4;
+            }
+            
+            if(ePC == 0){
+                atkScore += defendScore[eHuman] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman];
+            }
+            
+            if(ePC2 == 0){
+                atkScore += defendScore[eHuman2] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman2];
+            }                         
+        
+        return atkScore;
+    }
+    
+    private long attackScoreHorizontal(int currentRow, int currentColumn){
+        long atkScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+        // trai sang
+        
+            for(int i = 1; i < 5 && currentColumn + i < BanCo.columnNumbers; i++){
+                if(oCoArray[currentRow][currentColumn + i].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow][currentColumn + i].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn + j < BanCo.columnNumbers; j++){
+                        if(oCoArray[currentRow][currentColumn + j].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow][currentColumn + j].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            for(int i = 1; i < 5 && currentColumn - i >= 0; i++){
+                if(oCoArray[currentRow][currentColumn - i].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow][currentColumn - i].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn - j >= 0; j++){
+                        if(oCoArray[currentRow][currentColumn - j].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow][currentColumn - j].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        
+        
+        
+        
+        
+            if(eHuman == 2){
+                return 0;
+            }
+            
+            if(eHuman == 0){
+                atkScore += attackScore[ePC] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC];
+            }
+            
+            if(eHuman2 == 0){
+                atkScore += attackScore[ePC2] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC2];
+            }
+            
+            if(ePC >= ePC2){
+                atkScore -= 1;
+            }
+            else{
+                atkScore -= 2;
+            }
+            
+            if(ePC == 4){
+                atkScore *= 4;
+            }
+            
+            if(ePC == 0){
+                atkScore += defendScore[eHuman] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman];
+            }
+            
+            if(ePC2 == 0){
+                atkScore += defendScore[eHuman2] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman2];
+            }
+                          
+       
+        
+        return atkScore;
+    }
+    
+    private long attackScoreRightDiagonal(int currentRow, int currentColumn){
+        long atkScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+        
+        // xuong
+        
+            for(int i = 1; i < 5 && currentColumn + i < BanCo.columnNumbers && currentRow + i < BanCo.rowNumbers; i++){
+                if(oCoArray[currentRow + i][currentColumn + i].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow + i][currentColumn + i].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn + j < BanCo.columnNumbers && currentRow + j < BanCo.rowNumbers; j++){
+                        if(oCoArray[currentRow + j][currentColumn + j].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow + j][currentColumn + j].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            for(int i = 1; i < 5 && currentColumn - i >= 0 && currentRow - i >= 0; i++){
+                if(oCoArray[currentRow - i][currentColumn - i].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow - i][currentColumn - i].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn - j >= 0 && currentRow - j >= 0; j++){
+                        if(oCoArray[currentRow - j][currentColumn - j].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow - j][currentColumn - j].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            
+        
+       
+        
+        
+            if(eHuman == 2){
+                return 0;
+            }
+            
+            if(eHuman == 0){
+                atkScore += attackScore[ePC] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC];
+            }
+            
+            if(eHuman2 == 0){
+                atkScore += attackScore[ePC2] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC2];
+            }
+            
+            if(ePC >= ePC2){
+                atkScore -= 1;
+            }
+            else{
+                atkScore -= 2;
+            }
+            
+            if(ePC == 4){
+                atkScore *= 4;
+            }
+            
+            if(ePC == 0){
+                atkScore += defendScore[eHuman] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman];
+            }
+            
+            if(ePC2 == 0){
+                atkScore += defendScore[eHuman2] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman2];
+            }
+                          
+       
+        return atkScore;
+    }
+    
+    private long attackScoreLeftDiagonal(int currentRow, int currentColumn){
+        long atkScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+      
+        // len
+       
+            for(int i = 1; i < 5 && currentColumn + i < BanCo.columnNumbers && currentRow - i >= 0; i++){
+                if(oCoArray[currentRow - i][currentColumn + i].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow - i][currentColumn + i].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn + j < BanCo.columnNumbers && currentRow - j >= 0; j++){
+                        if(oCoArray[currentRow - j][currentColumn + j].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow - j][currentColumn + j].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            for(int i = 1; i < 5 && currentColumn - i >= 0 && currentRow + i < BanCo.rowNumbers; i++){
+                if(oCoArray[currentRow + i][currentColumn - i].getPlayer() == 1){
+                    ePC++;
+                }
+                else if(oCoArray[currentRow + i][currentColumn - i].getPlayer() == -1){
+                    eHuman++;
+                    break;
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn - j >= 0 && currentRow + j < BanCo.rowNumbers; j++){
+                        if(oCoArray[currentRow + j][currentColumn - j].getPlayer() == 1){
+                            ePC2++;
+                        }
+                        else if(oCoArray[currentRow + j][currentColumn - j].getPlayer() == -1){
+                            eHuman2++;
+                            break;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+       
+        
+        
+        
+        
+            if(eHuman == 2){
+                return 0;
+            }
+            
+            if(eHuman == 0){
+                atkScore += attackScore[ePC] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC];
+            }
+            
+            if(eHuman2 == 0){
+                atkScore += attackScore[ePC2] * 2;
+            }
+            else{
+                atkScore += attackScore[ePC2];
+            }
+            
+            if(ePC >= ePC2){
+                atkScore -= 1;
+            }
+            else{
+                atkScore -= 2;
+            }
+            
+            if(ePC == 4){
+                atkScore *= 4;
+            }
+            
+            if(ePC == 0){
+                atkScore += defendScore[eHuman] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman];
+            }
+            
+            if(ePC2 == 0){
+                atkScore += defendScore[eHuman2] * 2;
+            }
+            else{
+                atkScore += defendScore[eHuman2];
+            }
+                          
+       
+        return atkScore;
+    }
+    
+    
+    
+    // defend
+    private long defendScoreVertical(int currentRow, int currentColumn){
+        long defScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+        
+        // tren xuong
+       
+            for(int i = 1; i < 5 && currentRow + i < BanCo.rowNumbers; i++){
+                if(oCoArray[currentRow + i][currentColumn].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow + i][currentColumn].getPlayer() == -1){
+                    eHuman++;
                     
+                }
+                else{
+                    for(int j = 2; j < 6 && currentRow + j < BanCo.rowNumbers; j++){
+                        if(oCoArray[currentRow + j][currentColumn].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow + j][currentColumn].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                }
+            }
+            for(int i = 1; i < 5 && currentRow - i >= 0; i++){
+                if(oCoArray[currentRow - i][currentColumn].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow - i][currentColumn].getPlayer() == -1){
+                    eHuman++;
+                    
+                }
+                else{
+                    for(int j = 2; j < 6 && currentRow - j >= 0; j++){
+                        if(oCoArray[currentRow - j][currentColumn].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow - j][currentColumn].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                }
+            }
+       
+        
+        
+        
+       
+            if(ePC == 2){
+                return 0;
+            }
+            
+            if(ePC == 0){
+                defScore += defendScore[eHuman] * 2;
+            }
+            else{
+                defScore += defendScore[eHuman];
+            }
+            
+            if(eHuman >= eHuman2){
+                defScore -= 1;
+            }
+            else{
+                defScore -= 2;
+            }
+            
+            if(eHuman == 4){
+                defScore *= 4;
+            }
+                          
+       
+        return defScore;
+    }
+    
+    private long defendScoreHorizontal(int currentRow, int currentColumn){
+        long defScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+        // trai sang
+        
+            for(int i = 1; i < 5 && currentColumn + i < BanCo.columnNumbers; i++){
+                if(oCoArray[currentRow][currentColumn + i].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow][currentColumn + i].getPlayer() == -1){
+                    eHuman++;
+                   
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn + j < BanCo.columnNumbers; j++){
+                        if(oCoArray[currentRow][currentColumn + j].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow][currentColumn + j].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                }
+            }
+            for(int i = 1; i < 5 && currentColumn - i >= 0; i++){
+                if(oCoArray[currentRow][currentColumn - i].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow][currentColumn - i].getPlayer() == -1){
+                    eHuman++;
+                    
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn - j >= 0; j++){
+                        if(oCoArray[currentRow][currentColumn - j].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow][currentColumn - j].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                }
+            }
+       
+        
+        
+            if(ePC == 2){
+                return 0;
+            }
+            
+            if(ePC == 0){
+                defScore += defendScore[eHuman] * 2;
+            }
+            else{
+                defScore += defendScore[eHuman];
+            }
+            
+            if(eHuman >= eHuman2){
+                defScore -= 1;
+            }
+            else{
+                defScore -= 2;
+            }
+            
+            if(eHuman == 4){
+                defScore *= 4;
+            }
+                          
+        
+        return defScore;
+    }
+    
+    private long defendScoreRightDiagonal(int currentRow, int currentColumn){
+        long defScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+        
+        // xuong
+        
+            for(int i = 1; i < 5 && currentColumn + i < BanCo.columnNumbers && currentRow + i < BanCo.rowNumbers; i++){
+                if(oCoArray[currentRow + i][currentColumn + i].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow + i][currentColumn + i].getPlayer() == -1){
+                    eHuman++;
+                  
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn + j < BanCo.columnNumbers && currentRow + j < BanCo.rowNumbers; j++){
+                        if(oCoArray[currentRow + j][currentColumn + j].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow + j][currentColumn + j].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                }
+            }
+            for(int i = 1; i < 5 && currentColumn - i >= 0 && currentRow - i >= 0; i++){
+                if(oCoArray[currentRow - i][currentColumn - i].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow - i][currentColumn - i].getPlayer() == -1){
+                    eHuman++;
+                
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn - j >= 0 && currentRow - j >= 0; j++){
+                        if(oCoArray[currentRow - j][currentColumn - j].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow - j][currentColumn - j].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                }
+            }
+        
+            if(ePC == 2){
+                return 0;
+            }
+            
+            if(ePC == 0){
+                defScore += defendScore[eHuman] * 2;
+            }
+            else{
+                defScore += defendScore[eHuman];
+            }
+            
+            if(eHuman >= eHuman2){
+                defScore -= 1;
+            }
+            else{
+                defScore -= 2;
+            }
+            
+            if(eHuman == 4){
+                defScore *= 4;
+            }
+                          
+        
+        
+        return defScore;
+    }
+    
+    private long defendScoreLeftDiagonal(int currentRow, int currentColumn){
+        long defScore = 0;
+        int eHuman = 0;
+        int ePC = 0;
+        int eHuman2 = 0;
+        int ePC2 = 0;
+        // len
+        
+            for(int i = 1; i < 5 && currentColumn + i < BanCo.columnNumbers && currentRow - i >= 0; i++){
+                if(oCoArray[currentRow - i][currentColumn + i].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow - i][currentColumn + i].getPlayer() == -1){
+                    eHuman++;
+                 
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn + j < BanCo.columnNumbers && currentRow - j >= 0; j++){
+                        if(oCoArray[currentRow - j][currentColumn + j].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow - j][currentColumn + j].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            for(int i = 1; i < 5 && currentColumn - i >= 0 && currentRow + i < BanCo.rowNumbers; i++){
+                if(oCoArray[currentRow + i][currentColumn - i].getPlayer() == 1){
+                    ePC++;
+                    break;
+                }
+                else if(oCoArray[currentRow + i][currentColumn - i].getPlayer() == -1){
+                    eHuman++;
+                 
+                }
+                else{
+                    for(int j = 2; j < 6 && currentColumn - j >= 0 && currentRow + j < BanCo.rowNumbers; j++){
+                        if(oCoArray[currentRow + j][currentColumn - j].getPlayer() == 1){
+                            ePC2++;
+                            break;
+                        }
+                        else if(oCoArray[currentRow + j][currentColumn - j].getPlayer() == -1){
+                            eHuman2++;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+       
+            if(ePC == 2){
+                return 0;
+            }
+            
+            if(ePC == 0){
+                defScore += defendScore[eHuman] * 2;
+            }
+            else{
+                defScore += defendScore[eHuman];
+            }
+            
+            if(eHuman >= eHuman2){
+                defScore -= 1;
+            }
+            else{
+                defScore -= 2;
+            }
+            
+            if(eHuman == 4){
+                defScore *= 4;
+            }
+                          
+        
+        
+        return defScore;
+    }
+  
+    
+    
+    /*
+    
+    // Ham tim nuoc di cho may
+    private int maxDepth = 11;
+    private int maxMove = 3;
+    private int depth = 0;
+    private boolean fWin = false;
+    public int fEnd = 1;
+    Point[] PCMove = new Point[maxMove + 2];
+    Point[] HumanMove = new Point[maxMove + 2];
+    Point[] WinMove = new Point[maxDepth + 2];
+    Point[] LoseMove = new Point[maxDepth + 2];
+    private void findMove(){
+        if(depth > maxDepth) 
+            return;
+        depth++;
+        fWin = false;
+        boolean fLose = false;
+        Point pcMove = new Point();
+        Point humanMove = new Point();
+        int countMove = 0;
+        evaluateScore(1);
+        //lay ra 3 nuoc di co diem cao nhat cho may
+        //them
+        for(OCo oCo : stList){
+                    if(oCo.getPlayer() != 0)
+                        scoreArrray[oCo.getLocation().x/25][oCo.getLocation().y/25] = 0;
+                }
+        //
+        Point temp = new Point();
+        for(int i = 0; i < maxMove; i++){
+            temp = maxPosition();
+            PCMove[i] = temp;
+            scoreArrray[temp.x][temp.y] = 0;
+        }
+        
+        // lay 3 nuoc di max trong PCMove ra oanh thu?
+        countMove = 0;
+        while(countMove < maxMove){
+            pcMove = PCMove[countMove++];
+            oCoArray[pcMove.x][pcMove.y].setPlayer(1);
+            WinMove[depth - 1] = pcMove;
+            
+            //Tim nuoc di toi uu cho nguoi choi
+            resetScoreArrray();
+            evaluateScore(-1);           
+            //lay ra 3 o diem cao nhat cho nguoi
+            //them
+            for(OCo oCo : stList){
+                    if(oCo.getPlayer() != 0)
+                        scoreArrray[oCo.getLocation().x/25][oCo.getLocation().y/25] = 0;
+                }
+            //
+            for(int i = 0; i < maxMove; i++){
+                temp = maxPosition();
+                HumanMove[i] = temp;
+                scoreArrray[temp.x][temp.y] = 0;
+            }
+            
+            //oanh thu?
+            for(int i = 0; i < maxMove; i++){
+                humanMove = HumanMove[i];
+                oCoArray[humanMove.x][humanMove.y].setPlayer(-1);
+                
+                if(checkWin()){
+                    if(finish == Finish.Player1){
+                        fWin = true;
+                    }
+                    if(finish == Finish.Player2){
+                        fLose = true;
+                    }
+                    
+                }
+                if(fLose){
+                    oCoArray[pcMove.x][pcMove.y].setPlayer(0);
+                    oCoArray[humanMove.x][humanMove.y].setPlayer(0);
+                    break;
+                }
+                if(fWin){
+                    oCoArray[pcMove.x][pcMove.y].setPlayer(0);
+                    oCoArray[humanMove.x][humanMove.y].setPlayer(0);
+                    return;
+                }
+                findMove();
+                oCoArray[humanMove.x][humanMove.y].setPlayer(0);
+            }
+            oCoArray[pcMove.x][pcMove.y].setPlayer(0);
+            
+        }
+        
+    }
+    
+    public void AI(){
+        for(int i = 0; i < maxMove; i++){
+            WinMove[i] = new Point();
+            PCMove[i] = new Point();
+            HumanMove[i] = new Point();
+        }
+        depth = 0;
+        findMove();
+    }
+    */
+    int x,y;
+    public void startComputer(Graphics g){
+        if(stList.empty()){
+            play(BanCo.columnNumbers/2 * OCo.height + 1, BanCo.rowNumbers/2 * OCo.width +1, g);       
+        }
+        else{           
+            OCo oCo = searchMove();
+            play(oCo.getLocation().x + 1, oCo.getLocation().y + 1, g);
+        }
+    }
+    
+   
+    private OCo searchMove() {
+        OCo oCoResult = new OCo();
+        long maxScore = 0;
+        
+        for(int i = 0; i < BanCo.rowNumbers; i++){
+            for(int j = 0; j < BanCo.columnNumbers; j++){
+                if(oCoArray[i][j].getPlayer() == 0){
+                    long atkScore = attackScoreVertical(i, j) + attackScoreHorizontal(i, j) + attackScoreRightDiagonal(i, j) + attackScoreLeftDiagonal(i, j);
+                    long defScore = defendScoreVertical(i,j) + defendScoreHorizontal(i,j) + defendScoreRightDiagonal(i,j) + defendScoreLeftDiagonal(i,j);             
+                    long tempScore = atkScore > defScore? atkScore : defScore;
+                    long sumScore = (atkScore + defScore) > tempScore ? (atkScore + defScore) : tempScore;
+                    if(maxScore < sumScore){
+                        maxScore = sumScore;
+                        oCoResult = new OCo(oCoArray[i][j].getRow(), oCoArray[i][j].getColumn(), oCoArray[i][j].getLocation(), oCoArray[i][j].getPlayer());
+                    }
+                }
+                
+            }
+        }
+        
+        return oCoResult;
+    }
+        
+    
 }

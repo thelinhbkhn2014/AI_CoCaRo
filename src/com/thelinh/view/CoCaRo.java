@@ -175,7 +175,9 @@ public class CoCaRo extends javax.swing.JFrame {
     
     
     private void btnPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlayActionPerformed
-        caroController.startPlayerVSPlayer(g);
+      //  caroController.startPlayerVSPlayer(g);
+       caroController.startPlayerVSCom(g);
+
     }//GEN-LAST:event_btnPlayActionPerformed
 
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
@@ -197,7 +199,16 @@ public class CoCaRo extends javax.swing.JFrame {
         if(caroController.checkWin()){
             caroController.endGame();
         }
-      
+        else{
+            if(caroController.getMode() == 2){
+                caroController.startComputer(g);
+                if(caroController.checkWin()){
+                    caroController.endGame();
+            }
+        }
+        
+        }
+                
     }//GEN-LAST:event_pnlBanCoMouseClicked
 
     private void btnUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUndoActionPerformed
